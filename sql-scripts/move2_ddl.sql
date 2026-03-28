@@ -48,21 +48,11 @@ create table dim_supplier (
     supplier_country varchar(100)
 );
 
--- даты продаж
-create table dim_date (
-    date_key int primary key,
-    full_date date not null unique,
-    year int not null,
-    quarter int not null,
-    month int not null,
-    day int not null
-);
-
 -- товары
 create table dim_product (
     product_key bigserial primary key,
     product_id bigint not null unique,
-    product_name varchar(150) not null,
+    product_name varchar(150) not null, 
     product_category varchar(100),
     pet_category varchar(100),
     product_price numeric(10,2),
@@ -88,7 +78,7 @@ create table fact_sales (
     product_key bigint not null references dim_product(product_key),
     store_key bigint references dim_store(store_key),
     supplier_key bigint references dim_supplier(supplier_key),
-    date_key int not null references dim_date(date_key),
+    sale_date date not null,
     sale_quantity int not null,
     sale_total_price numeric(12,2) not null
 );
