@@ -1,84 +1,171 @@
--- покупатели
-create table dim_customer (
-    customer_key bigserial primary key,
-    customer_id bigint not null unique,
-    first_name varchar(100) not null,
-    last_name varchar(100) not null,
-    age int,
-    email varchar(255),
-    country varchar(100),
-    postal_code varchar(20),
-    pet_type varchar(50),
-    pet_name varchar(100),
-    pet_breed varchar(100)
-);
+insert into dim_customer (
+    customer_id,
+    first_name,
+    last_name,
+    age,
+    email,
+    country,
+    postal_code,
+    pet_type,
+    pet_name,
+    pet_breed
+)
+select distinct
+    sale_customer_id,
+    customer_first_name,
+    customer_last_name,
+    customer_age,
+    customer_email,
+    customer_country,
+    customer_postal_code,
+    customer_pet_type,
+    customer_pet_name,
+    customer_pet_breed
+from mock_data
+where sale_customer_id is not null;
 
--- продавцы
-create table dim_seller (
-    seller_key bigserial primary key,
-    seller_id bigint not null unique,
-    first_name varchar(100) not null,
-    last_name varchar(100) not null,
-    email varchar(255),
-    country varchar(100),
-    postal_code varchar(20)
-);
 
--- магазины
-create table dim_store (
-    store_key bigserial primary key,
-    store_name varchar(150) not null,
-    store_location varchar(250),
-    store_city varchar(100),
-    store_state varchar(100),
-    store_country varchar(100),
-    store_phone varchar(20),
-    store_email varchar(255)
-);
+insert into dim_seller (
+    seller_id,
+    first_name,
+    last_name,
+    email,
+    country,
+    postal_code
+)
+select distinct
+    sale_seller_id,
+    seller_first_name,
+    seller_last_name,
+    seller_email,
+    seller_country,
+    seller_postal_code
+from mock_data
+where sale_seller_id is not null;
 
--- всё о поставщиках
-create table dim_supplier (
-    supplier_key bigserial primary key,
-    supplier_name varchar(150) not null,
-    supplier_contact varchar(150),
-    supplier_email varchar(255),
-    supplier_phone varchar(30),
-    supplier_address varchar(255),
-    supplier_city varchar(100),
-    supplier_country varchar(100)
-);
 
--- товары
-create table dim_product (
-    product_key bigserial primary key,
-    product_id bigint not null unique,
-    product_name varchar(150) not null, 
-    product_category varchar(100),
-    pet_category varchar(100),
-    product_price numeric(10,2),
-    product_quantity int,
-    product_weight numeric(10,2),
-    product_color varchar(50),
-    product_size varchar(50),
-    product_brand varchar(100),
-    product_material varchar(100),
-    product_description text,
-    product_rating numeric(3,2),
-    product_reviews int,
-    product_release_date date,
-    product_expiry_date date
-);
+insert into dim_store (
+    store_name,
+    store_location,
+    store_city,
+    store_state,
+    store_country,
+    store_phone,
+    store_email
+)
+select distinct
+    store_name,
+    store_location,
+    store_city,
+    store_state,
+    store_country,
+    store_phone,
+    store_email
+from mock_data
+where store_name is not null;
 
--- центр звезды
-create table fact_sales (
-    sales_key bigserial primary key,
-    source_row_id bigint,
-    customer_key bigint not null references dim_customer(customer_key),
-    seller_key bigint not null references dim_seller(seller_key),
-    product_key bigint not null references dim_product(product_key),
-    store_key bigint references dim_store(store_key),
-    supplier_key bigint references dim_supplier(supplier_key),
-    sale_date date not null,
-    sale_quantity int not null,
-    sale_total_price numeric(12,2) not null
-);
+
+insert into dim_supplier (
+    supplier_name,
+    supplier_contact,
+    supplier_email,
+    supplier_phone,
+    supplier_address,
+    supplier_city,
+    supplier_country
+)
+select distinct
+    supplier_name,
+    supplier_contact,
+    supplier_email,
+    supplier_phone,
+    supplier_address,
+    supplier_city,
+    supplier_country
+from mock_data
+where supplier_name is not null;
+
+
+insert into dim_product (
+    product_id,
+    product_name,
+    product_category,
+    pet_category,
+    product_price,
+    product_quantity,
+    product_weight,
+    product_color,
+    product_size,
+    product_brand,
+    product_material,
+    product_description,
+    product_rating,
+    product_reviews,
+    product_release_date,
+    product_expiry_date
+)
+select distinct
+    sale_product_id,
+    product_name,
+    product_category,
+    pet_category,
+    product_price,
+    product_quantity,
+    product_weight,
+    product_color,
+    product_size,
+    product_brand,
+    product_material,
+    product_description,
+    product_rating,
+    product_reviews,
+    to_date(product_release_date, 'mm/dd/yyyy'),
+    to_date(product_expiry_date, 'mm/dd/yyyy')
+from mock_data
+where sale_product_id is not null;
+
+
+insert into fact_sales (
+    source_row_id,
+    customer_key,
+    seller_key,
+    product_key,
+    store_key,
+    supplier_key,
+    sale_date,
+    sale_quantity,
+    sale_total_price
+)
+select
+    md.id,
+    dc.customer_key,
+    ds.seller_key,
+    dp.product_key,
+    dst.store_key,
+    dsp.supplier_key,
+    to_date(md.sale_date, 'mm/dd/yyyy'),
+    md.sale_quantity,
+    md.sale_total_price
+from mock_data md
+join dim_customer dc
+    on md.sale_customer_id = dc.customer_id
+join dim_seller ds
+    on md.sale_seller_id = ds.seller_id
+join dim_product dp
+    on md.sale_product_id = dp.product_id
+left join dim_store dst
+    on md.store_name is not distinct from dst.store_name
+   and md.store_location is not distinct from dst.store_location
+   and md.store_city is not distinct from dst.store_city
+   and md.store_state is not distinct from dst.store_state
+   and md.store_country is not distinct from dst.store_country
+   and md.store_phone is not distinct from dst.store_phone
+   and md.store_email is not distinct from dst.store_email
+left join dim_supplier dsp
+    on md.supplier_name is not distinct from dsp.supplier_name
+   and md.supplier_contact is not distinct from dsp.supplier_contact
+   and md.supplier_email is not distinct from dsp.supplier_email
+   and md.supplier_phone is not distinct from dsp.supplier_phone
+   and md.supplier_address is not distinct from dsp.supplier_address
+   and md.supplier_city is not distinct from dsp.supplier_city
+   and md.supplier_country is not distinct from dsp.supplier_country;
