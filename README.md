@@ -20,4 +20,5 @@
 
 ### Результат
 Построена модель "звезда", позволяющая выполнять аналитические запросы по продажам.
-<img width="797" height="664" alt="image" src="https://github.com/user-attachments/assets/e118f0d6-ae89-4221-9cb3-b0606f50a2db" />
+<img width="755" height="703" alt="image" src="https://github.com/user-attachments/assets/5db2e1de-2cbc-4031-a9a8-c13a6f467479" />
+
