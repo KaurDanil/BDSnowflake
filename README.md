@@ -12,7 +12,7 @@
 - Создана таблица `mock_data`
 - Выделены:
   - факт: `fact_sales`
-  - измерения: `dim_customer`, `dim_seller`, `dim_product`, `dim_store`, `dim_supplier`, `dim_date`
+  - измерения: `dim_customer`, `dim_seller`, `dim_product`, `dim_store`, `dim_supplier`
 - Реализованы DDL и DML скрипты
 - Загружены данные в модель
 
